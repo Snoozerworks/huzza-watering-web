@@ -29,6 +29,6 @@ namespace PRM {
 	const ADC1 = 0x0D;
 	const ADC2 = 0x0E;
 	const ADC3 = 0x0F;
-	const ADC4 = 0xA0;
-	const _END = 0xA1;
+	const ADC4 = 0x10;
+	const _END = 0x11;
 }
