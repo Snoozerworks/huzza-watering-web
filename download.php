@@ -2,17 +2,16 @@
 require_once 'constants.inc';
 
 // Parameter values
-$pump1_vol = 200; // Pump flow cc/day
+$pump1_vol = 0; // Pump flow cc/day
 $pump2_vol = 0; // Pump flow cc/day
 $pump3_vol = 0; // Pump flow cc/day
 
 $pump_flow = 2000; // Pump flow capacity in cc/min.
-$run_interval = 4 * 3600; // Interval in seconds between pump activations.
-$tank_volume = 6000; // Tank volume in cc
+$run_interval = 1 * 3600; // Interval in seconds between pump activations.
+$tank_volume = 3000; // Tank volume in cc
                      
-// Connection intervall in milliseconds for the IoT thing
+// Connection interval in milliseconds for the IoT thing
 $refresh_rate = 2 * 60 * 1000;
-$refresh_rate = 10000;
 
 //
 // Send parameters to the Huzza
@@ -20,7 +19,7 @@ $refresh_rate = 10000;
 
 $end = pack ( 'C', ( int ) PRM\NONE );
 
-// Start ouput
+// Start output
 header ( 'Content-Type: application/octet-stream' );
 echo pack ( 'C', ( int ) CMD\SET );
 
