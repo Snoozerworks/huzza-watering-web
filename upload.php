@@ -18,7 +18,7 @@ function parseGetParam(&$payload) {
 			return false;
 		}
 		
-		$out [] = sprintf ( "%X", $p );
+		$out [] = sprintf ( "%u", $p );
 	}
 	return false;
 }
@@ -43,48 +43,39 @@ function parseSetParam(&$payload) {
 		
 		$val = array_splice ( $payload, 0, 4 );
 		$val = ($val [0] << 24) + ($val [1] << 16) + ($val [2] << 8) + $val [3];
-		$out [] = sprintf ( "%X", $p );
+		$out [] = sprintf ( "%u", $p );
 		$out [] = $val;
 		// $out .= sprintf ( "%x,%d", $p, $val );
 	}
 	return false;
 }
-ob_start ();
 
-// $h = getallheaders ();
-// echo "\r\nAll headers\r\n";
-// var_dump ( $h );
-// echo "\r\n\r\n";
-
-$filename = 'log.txt';
 date_default_timezone_set ( 'Europe/Stockholm' );
 
-$handle = @fopen ( $filename, 'ab' );
+$payload = file_get_contents ( "php://input" );
+$payload = str_split ( $payload );
+$payload = array_map ( 'ord', $payload );
+
+// First 3 bytes are chip id
+$chip_id = '';
+
+if (count ( $payload ) > 3) {
+	$val = array_splice ( $payload, 0, 3 );
+	$val = ($val [0] << 16) + ($val [1] << 8) + $val [2];
+	$chip_id = sprintf ( "%u", $val );
+} else {
+	// Ignore anything without a chip id
+	return;
+}
+
+$handle = @fopen ( sprintf ( "logs/%X.txt", $chip_id ), 'ab' );
 if (! $handle) {
 	return;
 }
 
-// Get raw data
-// fprintf ( $handle, "\r\nOB start()" );
+ob_start ();
 
-$payload = file_get_contents ( "php://input" );
-
-// echo "\r\nRaw payload\r\n";
-// var_dump ( $payload );
-
-// echo "\r\nPayload bytes \r\n";
-// $k = 0;
-// for($k = 0; $k < strlen ( $payload ); $k ++) {
-// printf ( "%X ", ord ( $payload [$k] ) );
-// }
-
-// echo "\r\n\r\n";
-// printf ( "\r\n** Raw post data %s **", date ( 'Y-m-d H:i:s' ) );
-// printf ( "\r\nLength %d", strlen ( $payload ) );
-
-$payload = str_split ( $payload );
-$payload = array_map ( 'ord', $payload );
-
+// Next, command byte followed by data...
 $out = '';
 while ( count ( $payload ) ) {
 	
@@ -127,7 +118,8 @@ while ( count ( $payload ) ) {
 	}
 }
 
-$out = sprintf ( "\r\nTime,%s,%s", date ( 'Y-m-d H:i:s' ), $out );
+$out = sprintf ( "\r\nTime,%s,Id,%s,%s", date ( DateTime::ATOM ), $chip_id, $out );
+
 fprintf ( $handle, $out );
 
 $h = ob_get_flush ();

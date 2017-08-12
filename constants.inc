@@ -24,11 +24,33 @@ namespace PRM {
 	const P2_PUMPED_VOL = 0x08;
 	const P3_PUMPED_VOL = 0x09;
 	const TANK_VOL = 0x0A;
-	const RUN_INTERVAL = 0x0B;
+	const ONTIME = 0x0B;
 	const REFRESH_RATE = 0x0C;
 	const ADC1 = 0x0D;
 	const ADC2 = 0x0E;
 	const ADC3 = 0x0F;
 	const ADC4 = 0x10;
-	const _END = 0x11;
+	const CHID = 0x11;
+	const _END = 0x12;
+	const TR_PRM = array (
+			NONE => 'NONE',
+			P1_FLOW => 'Pumpkapacitet 1',
+			P2_FLOW => 'Pumpkapacitet 2',
+			P3_FLOW => 'Pumpkapacitet 3',
+			P1_RQST_VOL => 'Önskad volym 1',
+			P2_RQST_VOL => 'Önskad volym 2',
+			P3_RQST_VOL => 'Önskad volym 3',
+			P1_PUMPED_VOL => 'Levererad volym 1',
+			P2_PUMPED_VOL => 'Levererad volym 2',
+			P3_PUMPED_VOL => 'Levererad volym 3',
+			TANK_VOL => 'Tankvolym',
+			ONTIME => 'Pumptid per runda',
+			REFRESH_RATE => 'Uppdateringshastighet',
+			ADC1 => 'Givare 1',
+			ADC2 => 'Givare 2',
+			ADC3 => 'Givare 3',
+			ADC4 => 'Givare 4',
+			CHID => 'Chip id',
+			_END => 'END' 
+	);
 }
