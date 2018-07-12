@@ -15,8 +15,6 @@
 </head>
 <body>
 
-	<h1>Fuktmätare</h1>
-
 <?php
 error_reporting ( E_ALL );
 require_once ('../../server_access/htmlize_func.inc');
@@ -28,10 +26,10 @@ $chip = HuzzaWatering::getChip ();
 $from = HuzzaWatering::getHistoryLength ();
 $n = HuzzaWatering::getSampleCount ();
 
-echo "\n<p>Chips<br/>\n";
+echo "\n<p>Chips: ";
 foreach ( $chips as $v ) {
 	$sel = ($v == $chip) ? '&gt;' : '';
-	printf ( "<a href=\"?chip=%s\">%s %s</a><br/>\n", $v, $sel, $v );
+	printf ( "<a href=\"?chip=%s\">%s %s</a> ", $v, $sel, $v );
 }
 printf ( "\n<br/>Från: %s", $from->format ( DateTime::ATOM ) );
 
@@ -94,6 +92,14 @@ Visa senaste
 EOT;
 		?>
 
+
+		 var dec2date = function(text, value, precision) {
+             var d = new Date();
+             d.setTime(value*1000);                
+             return d.toLocaleString().slice(2,-3);
+         }
+
+		
 		/*
 		* Moisture level plots
 		*/
@@ -118,17 +124,11 @@ EOT;
         });
 
         // Add axis
-        linesChart.addAxis("x", {
-            labelFunc: function(text, value, precision) {
-                var d = new Date();
-                d.setTime(value*1000);                
-                return d.toLocaleString().slice(2,-3);
-            }
-        });
+        linesChart.addAxis("x", { labelFunc: dec2date });
 
         // Add axis
         //linesChart.addAxis("y", {vertical: true, includeZero: false});  
-        linesChart.addAxis("y", {vertical: true, min:500, max:900});
+        linesChart.addAxis("y", {vertical: true, min:300, max:900});
 
         // Add the series of data
         linesChart.addSeries("Kruka 1", log1);
@@ -181,13 +181,7 @@ EOT;
         });
 
         // Add axis
-        linesPumped.addAxis("x", {
-            labelFunc: function(text, value, precision) {
-                var d = new Date();
-                d.setTime(value*1000);                
-                return d.toLocaleString().slice(2,-3);
-            }
-        });
+        linesPumped.addAxis("x", { labelFunc: dec2date });
 
         // Add axis
         linesPumped.addAxis("y", {vertical: true, includeZero: true});
@@ -217,17 +211,60 @@ EOT;
 		// Add legend
 		new Legend({chart: linesPumped}, "legendPumped");
 
-		
+
+		/*
+		* Last error plots
+		*/
+
+        var lasterr = new StoreSeries(new Memory({data: json_data}), {}, {x: fields["time"], y: fields["s17"] });
+
+        // Create the chart
+        var linesError = new Chart("chartError", {title: "Senaste felkod"});
+
+        // Set the theme
+        linesError.setTheme(Theme);
+
+        // Add the only/default plot
+        linesError.addPlot("chartError",
+        {
+            type: Lines, // our plot2d/Lines module reference as type value
+            labelOffset: -20,
+        });
+
+        // Add axis
+        linesError.addAxis("x", { labelFunc: dec2date });
+        linesError.addAxis("y", {vertical: true, includeZero: true});
+
+        // Add the series of data
+        linesError.addSeries("Last error", lasterr);
+        
+        // Add grid
+        linesError.addPlot("Grid", { 
+            type: Grid,
+            hAxis: "x",
+            vAxis: "y",
+            hMajorLines: true,
+            //hMinorLines: true,
+            vMajorLines: true,
+            vMinorLines: true,
+            });
+
+        // Add zoom and pan to chart
+        new MouseZoomAndPan(linesError, "chartPumped");
+        new MouseZoomAndPan(linesError, "chartPumped", {axis: "y"});
+        
+        // Render the chart!
+        linesError.render();
 
     });
 </script>
 
 	<!-- create the chart -->
-	<div id="chartNode" style="width:100%; height: 350px;"></div>
-	<div id="legendNode" style="width:100%; height: 50px;"></div>
-
-	<div id="chartPumped" style="width: 100%; height: 350px;"></div>
-	<div id="legendPumped" style="width: 100%; height: 50px;"></div>
+	<div id="chartNode" style="width: 85%; height: 350px; margin:auto;"></div>
+	<div id="legendNode" style="width: 85%; height: 50px; margin:auto;"></div>
+	<div id="chartPumped" style="width: 85%; height: 350px; margin:auto;"></div>
+	<div id="legendPumped" style="width: 85%; height: 50px; margin:auto;"></div>
+	<div id="chartError" style="width: 85%; height: 200px; margin:auto;"></div>
 
 </body>
 </html>
