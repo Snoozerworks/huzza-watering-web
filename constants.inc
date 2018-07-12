@@ -70,5 +70,6 @@ namespace ERR {
 	const PARAMID_GET_ERR = 0x09;
 	const NULLPTR_ERR = 0x0A;
 	const BUFFER_OVERRUN = 0x0B;
+	const EMPTY_INSTREAM = 0x0C;
 	const _END = 0x0C;
 }
