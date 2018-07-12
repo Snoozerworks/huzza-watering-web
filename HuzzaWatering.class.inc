@@ -270,8 +270,10 @@ class HuzzaWatering {
 	}
 	
 	/**
-	 * Uses $_REQUEST['chip'] to select chip.
+	 * Returns chip specified by $_REQUEST['chip'] if existing and valid.
+	 * Else, defaults to first available chip as returned from listChips().  
 	 *
+	 * @see HuzzaWatering::listChips
 	 * @return number
 	 */
 	public static function getChip() {
@@ -294,14 +296,14 @@ class HuzzaWatering {
 	}
 	
 	/**
-	 * Return log files in an string array.
+	 * Lists chip ids from available log files.
 	 *
 	 * @return string[]
 	 */
 	public static function listChips() {
 		$chips = [ ];
 		foreach ( glob ( "logs/*.txt" ) as $filename ) {
-			$chips [] = substr ( substr ( $filename, 5 ), 0, - 4 );
+			$chips [] = substr ( $filename, 5, -4);
 		}
 		return $chips;
 	}
