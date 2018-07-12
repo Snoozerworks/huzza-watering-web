@@ -30,8 +30,10 @@ namespace PRM {
 	const ADC2 = 0x0E;
 	const ADC3 = 0x0F;
 	const ADC4 = 0x10;
-	const CHID = 0x11;
+	const LAST_ERR = 0x11;
 	const _END = 0x12;
+	
+	// Translation to strings
 	const TR_PRM = array (
 			NONE => 'NONE',
 			P1_FLOW => 'Pumpkapacitet 1',
@@ -50,7 +52,23 @@ namespace PRM {
 			ADC2 => 'Givare 2',
 			ADC3 => 'Givare 3',
 			ADC4 => 'Givare 4',
-			CHID => 'Chip id',
+			LAST_ERR => 'Last error',
 			_END => 'END' 
 	);
+}
+
+namespace ERR {
+
+	const NOERR = 0x00;
+	const CONN_ERR = 0x01;
+	const RESP_HTTP_ERR = 0x03;
+	const RESP_TIMEOUT_ERR = 0x04;
+	const RESP_MALFORMED_ERR = 0x05;
+	const BAD_COMMAND_ERR = 0x06;
+	const PARAMID_SET_ERR = 0x07;
+	const PARAMVAL_SET_ERR = 0x08;
+	const PARAMID_GET_ERR = 0x09;
+	const NULLPTR_ERR = 0x0A;
+	const BUFFER_OVERRUN = 0x0B;
+	const _END = 0x0C;
 }
