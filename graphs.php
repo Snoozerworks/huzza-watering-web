@@ -17,9 +17,9 @@
 
 <?php
 error_reporting ( E_ALL );
-require_once ('../../server_access/htmlize_func.inc');
+require_once ('../server_access/htmlize_func.inc');
 require_once ('HuzzaWatering.class.inc');
-require_once 'constants.inc';
+require_once ('constants.inc');
 
 $chips = HuzzaWatering::listChips ();
 $chip = HuzzaWatering::getChip ();
