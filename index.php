@@ -18,7 +18,6 @@ require_once 'constants.inc';
 
 date_default_timezone_set ( 'Europe/Stockholm' );
 
-$filename = 'logs/D38833.txt';
 
 $Log = new HuzzaWatering ();
 
@@ -26,16 +25,34 @@ $tz = new DateTimeZone ( 'Europe/Stockholm' );
 $from_time = new DateTime ( 'now', $tz );
 $from_time->sub ( new DateInterval ( 'P2Y' ) );
 
-$chips = HuzzaWatering::listChips ();
-$chip = HuzzaWatering::getChip ();
+$chips = HuzzaWatering::listDevices ();
+$dev_id = (isset ( $_REQUEST ['dev_id'] )) ? trim ( $_REQUEST ['dev_id'] ) : '';
+if (! HuzzaWatering::deviceExists ( $dev_id )) {
+	if (empty ( $chips )) {
+		echo "Ingen spara data finns sparad.";
+		return;
+	}
+	// No valid device id supplied. Use first stored as default.
+	$dev_id = $chips [0];
+}
+
+if (! in_array ( $dev_id, $chips )) {
+	if (isset ( $chips [0] )) {
+		$dev_id = $chips [0];
+	} else {
+		echo "\nNo data on server yet.";
+		exit ();
+	}
+}
 
 echo "\n<p>Chips<br/>\n";
 foreach ( $chips as $v ) {
-	$sel = ($v == $chip) ? '&gt;' : '';
-	printf ( "<a href=\"?chip=%s\">%s %s</a><br/>\n", $v, $sel, $v );
+	$sel = ($v == $dev_id) ? '&gt;' : '';
+	printf ( "<a href=\"?dev_id=%s\">%s %s</a><br/>\n", $v, $sel, $v );
 }
 
-$Log->Load ( $chip, $from_time );
+$Log->setDeviceId ( $dev_id );
+$Log->LoadLog ( $from_time );
 $log_arr = $Log->getLog ();
 
 echo "\n<h2>Parameters in uploaded data</h2>";

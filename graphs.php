@@ -21,20 +21,29 @@ require_once ('../server_access/htmlize_func.inc');
 require_once ('HuzzaWatering.class.inc');
 require_once ('constants.inc');
 
-$chips = HuzzaWatering::listChips ();
-$chip = HuzzaWatering::getChip ();
+$chips = HuzzaWatering::listDevices ();
+$dev_id = (isset ( $_REQUEST ['dev_id'] )) ? trim ( $_REQUEST ['dev_id'] ) : '';
+if (! HuzzaWatering::deviceExists ( $dev_id )) {
+	if (empty ( $chips )) {
+		echo "Ingen spara data finns sparad.";
+		return;
+	}
+	// No valid device id supplied. Use first stored as default.
+	$dev_id = $chips [0];
+}
+
 $from = HuzzaWatering::getHistoryLength ();
 $n = HuzzaWatering::getSampleCount ();
 
-echo "\n<p>Chips: ";
 foreach ( $chips as $v ) {
-	$sel = ($v == $chip) ? '&gt;' : '';
-	printf ( "<a href=\"?chip=%s\">%s %s</a> ", $v, $sel, $v );
+	$sel = ($v == $dev_id) ? '&gt;' : '';
+	printf ( "\n<a href=\"?dev_id=%s\">%s %s</a><br/> ", $v, $sel, $v );
 }
 printf ( "\n<br/>Från: %s", $from->format ( DateTime::ATOM ) );
 
 $Log = new HuzzaWatering ();
-$Log->Load ( $chip, $from );
+$Log->setDeviceId ( $dev_id );
+$Log->LoadLog ( $from );
 $log_arr = $Log->asArray ( $n );
 printf ( "\n<br/>Punkter: %d</p>", count ( $log_arr ) );
 $field_index = array_flip ( $Log->getFields () );
@@ -260,11 +269,11 @@ EOT;
 </script>
 
 	<!-- create the chart -->
-	<div id="chartNode" style="width: 85%; height: 350px; margin:auto;"></div>
-	<div id="legendNode" style="width: 85%; height: 50px; margin:auto;"></div>
-	<div id="chartPumped" style="width: 85%; height: 350px; margin:auto;"></div>
-	<div id="legendPumped" style="width: 85%; height: 50px; margin:auto;"></div>
-	<div id="chartError" style="width: 85%; height: 200px; margin:auto;"></div>
+	<div id="chartNode" style="width: 85%; height: 350px; margin: auto;"></div>
+	<div id="legendNode" style="width: 85%; height: 50px; margin: auto;"></div>
+	<div id="chartPumped" style="width: 85%; height: 350px; margin: auto;"></div>
+	<div id="legendPumped" style="width: 85%; height: 50px; margin: auto;"></div>
+	<div id="chartError" style="width: 85%; height: 200px; margin: auto;"></div>
 
 </body>
 </html>

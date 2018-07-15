@@ -1,9 +1,17 @@
 <?php
+$_SERVER ['DOCUMENT_ROOT'] || ($_SERVER ['DOCUMENT_ROOT'] = str_replace ( getenv ( "SCRIPT_NAME" ), "", str_replace ( "\\", "/", getenv ( "SCRIPT_FILENAME" ) ) ));
+
+require_once 'constants.inc';
+
 /**
  * Some functions to get log file contents as php array.
  */
-require_once 'constants.inc';
 class HuzzaWatering {
+	private $send_params;
+	private $request_params;
+	private $pump_no;
+	private $dev_id; // Chip id
+	private $settings = [ ]; // Chip settings
 	private $pids = [ ]; // Parameter names
 	private $log = [ ]; // Log
 	                    // public $from_time = null; // DateTime object for first data
@@ -11,6 +19,29 @@ class HuzzaWatering {
 	function __construct() {
 		$this->from_time = new DateTime ( 'now', new DateTimeZone ( 'Europe/Stockholm' ) );
 		$this->interval = new DateInterval ( 'P2D' );
+		$this->pump_no = 1;
+		$this->send_params = self::getParamsSelection ();
+		$this->send_params = array_fill_keys ( array_keys ( $this->send_params ), FALSE );
+	}
+	
+	/**
+	 * Load send and request parameters from file.
+	 * A valid device id must be set before.
+	 */
+	private function LoadParams() {
+		$this->send_params = [ ];
+		$this->request_params = [ ];
+		
+		if (! self::deviceExists ( $this->dev_id )) {
+			return;
+		}
+		$filename = sprintf ( '%1$s/hw/dev/%2$s/%2$s.conf', $_SERVER ['DOCUMENT_ROOT'], $this->dev_id );
+		if (! file_exists ( $filename )) {
+			return;
+		}
+		$a = json_decode ( fgets ( $filename ) );
+		$this->send_params = $a [0];
+		$this->request_params = $a [1];
 	}
 	
 	/**
@@ -26,6 +57,250 @@ class HuzzaWatering {
 	function getLog() {
 		return $this->log;
 	}
+	public static function getParamsSelection() {
+		$p = PRM\TR_PRM;
+		unset ( $p [PRM\NONE] );
+		unset ( $p [PRM\_END] );
+		return $p;
+	}
+	function getSendParams() {
+		return $this->send_params;
+	}
+	function setSendParams($params) {
+		$this->send_params = $params;
+	}
+	function getRequestParams() {
+		return $this->request_params;
+	}
+	function setRequestParams($params) {
+		if (! $this->dev_id) {
+			// No device selected
+			$this->request_params = [ ];
+		}
+		$this->request_params = $params;
+	}
+	function save() {
+		if ($this->dev_id) {
+			$a = [ ];
+			$a [0] = $this->send_params;
+			$a [1] = $this->request_params;
+			$filename = sprintf ( '%1$s/hw/dev/%2$s/%2$s.conf', $_SERVER ['DOCUMENT_ROOT'], $this->dev_id );
+			file_put_contents ( $filename, json_encode ( $a ) );
+			return FALSE;
+		}
+		return TRUE;
+	}
+	
+	/**
+	 * Load parameters for device with given id.
+	 *
+	 * @param string $dev_id
+	 *        	Device id as 6 characters HEX.
+	 * @return boolean True on failure.
+	 */
+	function loadDevice($dev_id) {
+		$this->dev_id = 0;
+		$dev_id = trim ( $dev_id );
+		if (self::isValidDeviceId ( $dev_id )) {
+			$this->dev_id = $dev_id;
+		}
+		$this->LoadParams ();
+		return $this->dev_id ? FALSE : TRUE;
+	}
+	
+	/**
+	 * Validate a device id.
+	 * Device id shall be a 6 characters of HEX-code.
+	 *
+	 * @param string $dev_id
+	 * @return boolean
+	 */
+	static function isValidDeviceId($dev_id) {
+		$dev_id = trim ( $dev_id );
+		return (strlen ( $dev_id ) == 6 && ctype_xdigit ( $dev_id ));
+	}
+	
+	/**
+	 * Assign the chip id.
+	 *
+	 * @param string $chip
+	 *        	HEX code chip id.
+	 */
+	function getDeviceId() {
+		return $this->dev_id;
+	}
+	
+	/**
+	 * Load parameters for chip.
+	 *
+	 * @param string $filename
+	 * @return bool True if there is no .conf file.
+	 */
+	public function readSettings() {
+		$this->settings = [ ];
+		if (! $this->dev_id) {
+			return;
+		}
+		$filename = sprintf ( '%1$s/hw/dev/%2$s/%2$s.conf', $_SERVER ['DOCUMENT_ROOT'], $this->dev_id );
+		if (file_exists ( $filename )) {
+			$this->settings = json_decode ( fgets ( $filename ) );
+		} else {
+			
+			self::getParamsSelection ();
+		}
+	}
+	
+	/**
+	 * Save parameters for chip.
+	 *
+	 * @param array $config
+	 *        	Configuration
+	 * @return bool True on failure.
+	 */
+	public function writeSettings() {
+		if ($this->dev_id) {
+			$filename = sprintf ( '%1$s/hw/dev/%2$s/%2$s.conf', $_SERVER ['DOCUMENT_ROOT'], $this->dev_id );
+			file_put_contents ( $filename, json_encode ( $this->settings ) );
+			return FALSE;
+		}
+		return TRUE;
+	}
+	
+	/**
+	 * Select pump number $n.
+	 */
+	function selectPump(int $n) {
+		$this->pump_no = $n;
+	}
+	
+	/**
+	 * Set pump capacity in cc/min for pump number $n.
+	 *
+	 * @param int $q
+	 * @param int $n
+	 */
+	function setPumpCapacity($q, $n) {
+		switch ($n) {
+			case 1 :
+				$this->settings [PRM\P1_FLOW] = $q;
+				break;
+			case 2 :
+				$this->settings [PRM\P2_FLOW] = $q;
+				break;
+			case 3 :
+				$this->settings [PRM\P3_FLOW] = $q;
+				break;
+		}
+	}
+	
+	/**
+	 * Get pump flow capacity for selected pump.
+	 *
+	 * @return int Capacity in cc/min.
+	 */
+	function getPumpCapacity() {
+		switch ($this->pump_no) {
+			case 1 :
+				return $this->settings [PRM\P1_FLOW] = $q;
+			case 2 :
+				return $this->settings [PRM\P2_FLOW] = $q;
+			case 3 :
+				return $this->settings [PRM\P3_FLOW] = $q;
+		}
+	}
+	
+	/**
+	 * Set requested flow for pump $n in cc/min.
+	 *
+	 * @param int $q
+	 * @param int $n
+	 */
+	function setPumpSetpoint($q, $n) {
+		switch ($n) {
+			case 1 :
+				$this->settings [PRM\P1_RQST_VOL] = $q;
+				break;
+			case 2 :
+				$this->settings [PRM\P2_RQST_VOL] = $q;
+				break;
+			case 3 :
+				$this->settings [PRM\P3_RQST_VOL] = $q;
+				break;
+		}
+	}
+	
+	/**
+	 * Get requested flow for selected pump.
+	 *
+	 * @return int Flow in cc/min.
+	 */
+	function getPumpSetpoint() {
+		switch ($this->pump_no) {
+			case 1 :
+				return @$this->settings [PRM\P1_RQST_VOL] = $q;
+			case 2 :
+				return @$this->settings [PRM\P2_RQST_VOL] = $q;
+			case 3 :
+				return @$this->settings [PRM\P3_RQST_VOL] = $q;
+		}
+	}
+	
+	/**
+	 * Set tank volume.
+	 *
+	 * @param int $volume
+	 *        	Volume in cc.
+	 */
+	function setTankVolume(int $volume) {
+		$this->settings [PRM\TANK_VOL] = $volume;
+	}
+	
+	/**
+	 * Get tank volume.
+	 *
+	 * @param int $volume
+	 *        	Volume in cc.
+	 */
+	function getTankVolume() {
+		return @$this->settings [PRM\TANK_VOL];
+	}
+	
+	/**
+	 * Set connection interval.
+	 * Minimum value 1000 ms.
+	 *
+	 * @param int $t
+	 *        	Interval in milliseconds.
+	 */
+	function setConnectionInterval(int $t) {
+		$this->settings [PRM\REFRESH_RATE] = max ( 1000, $t );
+	}
+	
+	/**
+	 * Get connection interval.
+	 * Minimum value 1000 ms.
+	 *
+	 * @return int Interval in milliseconds.
+	 */
+	function getConnectionInterval() {
+		return @$this->settings [PRM\REFRESH_RATE];
+	}
+	
+	/**
+	 * Reset last active error to NOERR.
+	 */
+	function resetError() {
+		$this->settings [PRM\LAST_ERR] = ERR\NOERR;
+	}
+	
+	/**
+	 * Reset pumped volume for pump 1, 2 and 3.
+	 */
+	function resetPumpedVolume() {
+		$this->settings [PRM\P1_PUMPED_VOL] = 0;
+		$this->settings [PRM\P2_PUMPED_VOL] = 0;
+		$this->settings [PRM\P3_PUMPED_VOL] = 0;
+	}
 	
 	/**
 	 * Load log for given chip and returns it as an array.
@@ -36,14 +311,12 @@ class HuzzaWatering {
 	 * @param DateTime $from
 	 *        	Optional. Include data for last 2 days by default.
 	 */
-	function Load($chip = '', DateTime $from = null) {
-		if (! $chip) {
-			$chip = HuzzaWatering::getChip ();
-		}
-		$filename = 'logs/' . $chip . '.txt';
+	function LoadLog(DateTime $from = null) {
+		$filename = $_SERVER ['DOCUMENT_ROOT'] . "/hw/dev/{$this->dev_id}/{$this->dev_id}.log";
 		if (! file_exists ( $filename )) {
 			return;
 		}
+		
 		$from = is_null ( $from ) ? $this::getHistoryLength () : $from;
 		
 		$log_arr = [ ];
@@ -79,7 +352,7 @@ class HuzzaWatering {
 					if ($k % 2) {
 						$vals [$pid] = $row [$k];
 					} else {
-						$pid = sprintf("s%d",$row [$k]);
+						$pid = sprintf ( "s%d", $row [$k] );
 						$this->pids [$pid] = null;
 						$vals [$pid] = null;
 					}
@@ -211,7 +484,7 @@ class HuzzaWatering {
 	}
 	
 	/**
-	 * Add missing fields with value null if they do not exists.
+	 * Add null to missing fields.
 	 *
 	 * @param array $log
 	 * @param array $fields
@@ -270,42 +543,33 @@ class HuzzaWatering {
 	}
 	
 	/**
-	 * Returns chip specified by $_REQUEST['chip'] if existing and valid.
-	 * Else, defaults to first available chip as returned from listChips().  
+	 * Check if device exist on server.
 	 *
-	 * @see HuzzaWatering::listChips
-	 * @return number
+	 * @param string $dev_id
+	 *        	Device id as HEX.
+	 * @return boolean True if it exists.
 	 */
-	public static function getChip() {
-		$chips = HuzzaWatering::listChips ();
-		
-		if (empty ( $chips )) {
-			return '';
+	public static function deviceExists($dev_id) {
+		$dev_id = trim ( $dev_id );
+		if (! self::isValidDeviceId ( $dev_id )) {
+			return FALSE;
 		}
-		
-		if (! isset ( $_REQUEST ['chip'] )) {
-			// Use first chip item by default
-			return $chips [0];
-		}
-		
-		if (in_array ( $_REQUEST ['chip'], $chips )) {
-			return $_REQUEST ['chip'];
-		}
-		
-		return '';
+		$devices = self::listDevices ();
+		return in_array ( $dev_id, $devices );
 	}
 	
 	/**
-	 * Lists chip ids from available log files.
+	 * Lists chip ids from available .conf files.
 	 *
 	 * @return string[]
 	 */
-	public static function listChips() {
-		$chips = [ ];
-		foreach ( glob ( "logs/*.txt" ) as $filename ) {
-			$chips [] = substr ( $filename, 5, -4);
+	public static function listDevices() {
+		$devices = [ ];
+		$directories = glob ( $_SERVER ['DOCUMENT_ROOT'] . '/hw/dev/*', GLOB_ONLYDIR );
+		foreach ( $directories as $d ) {
+			$devices [] = substr ( $d, - 6 );
 		}
-		return $chips;
+		return $devices;
 	}
 }
 
