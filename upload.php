@@ -68,7 +68,12 @@ if (count ( $payload ) > 3) {
 	return;
 }
 
-$handle = @fopen ( sprintf ( "logs/%X.txt", $chip_id ), 'ab' );
+// Create directory and file if not exists.  
+$dir = sprintf ("dev/%X", $chip_id);
+if (!file_exists($dir)) {
+	mkdir($dir, 0755, true);
+}
+$handle = @fopen ( sprintf ( "%s/%X.log", $dir, $chip_id  ), 'ab' );
 if (! $handle) {
 	return;
 }

@@ -1,66 +1,51 @@
 <?php
+require_once 'download2.inc';
 require_once 'constants.inc';
 
 // Chip id to identify the chip making the request
 $chipid = (isset ( $_REQUEST ['cid'] )) ? $_REQUEST ['cid'] : - 1;
 
-// Parameter values
-$pump1_vol = 0 * 2 * 7200; // Pump flow request cc/day
-$pump2_vol = 0 * 2 * 7200; // Pump flow request cc/day
-$pump3_vol = 0 * 2 * 7200; // Pump flow request cc/day
+$send_params = [ 
+		// PRM\LAST_ERR=>0, // Error code
+		PRM\ONTIME => 120, // Pump run time per round.
+		PRM\TANK_VOL => 4000, // Tank volume in cc,
+		PRM\REFRESH_RATE => 5 * 1000, // Connection interval in milliseconds for the IoT thing
+		
+		// P1 nutrition pump 
+		PRM\P1_FLOW => 70, // Pump flow capacity in cc/min.
+		PRM\P1_PUMPED_VOL=>0, // Accumulated pumped volume
+		PRM\P1_RQST_VOL => 0, // Pump flow request cc/day
+		
+		// Water pump
+		PRM\P2_FLOW => 450,
+		PRM\P2_PUMPED_VOL => 0,
+		PRM\P2_RQST_VOL => 0,
+		
+		// Pump 3 not used
+		PRM\P3_FLOW => 70,
+		PRM\P3_PUMPED_VOL => 0,
+		PRM\P3_RQST_VOL => 0 
+];
 
-$pump_flow = 70; // Pump flow capacity in cc/min.
-$ontime = 120; // Pump run time per round.
-$tank_volume = 4000; // Tank volume in cc
-                     
-// Connection interval in milliseconds for the IoT thing
-$refresh_rate = 2 * 60 * 1000;
-$refresh_rate = 10 * 1000;
+ $request_params = [
+		PRM\LAST_ERR,
+		PRM\ONTIME,
+		PRM\TANK_VOL,
+		PRM\REFRESH_RATE,
+		PRM\P1_FLOW,
+		PRM\P1_PUMPED_VOL,
+		PRM\P1_RQST_VOL,
+		PRM\P2_FLOW,
+		PRM\P2_PUMPED_VOL,
+		PRM\P2_RQST_VOL,
+		PRM\P3_FLOW,
+		PRM\P3_PUMPED_VOL,
+		PRM\P3_RQST_VOL,
+		PRM\ADC1,
+		PRM\ADC2,
+		PRM\ADC3,
+		PRM\ADC4
+];
 
-//
-// Send parameters to the Huzza
-//
+respond($send_params, $request_params);
 
-$end = pack ( 'C', ( int ) PRM\NONE );
-
-// Start output
-header ( 'Content-Type: application/octet-stream' );
-echo pack ( 'C', ( int ) CMD\SET );
-// // Reset pumped volume
-// echo pack ( 'CN', ( int ) PRM\P1_PUMPED_VOL, ( int ) 0 );
-// echo pack ( 'CN', ( int ) PRM\P2_PUMPED_VOL, ( int ) 0 );
-// echo pack ( 'CN', ( int ) PRM\P3_PUMPED_VOL, ( int ) 0 );
-echo pack ( 'CN', ( int ) PRM\P1_RQST_VOL, ( int ) $pump1_vol );
-echo pack ( 'CN', ( int ) PRM\P2_RQST_VOL, ( int ) $pump2_vol );
-echo pack ( 'CN', ( int ) PRM\P3_RQST_VOL, ( int ) $pump3_vol );
-echo pack ( 'CN', ( int ) PRM\P1_FLOW, ( int ) $pump_flow );
-echo pack ( 'CN', ( int ) PRM\P2_FLOW, ( int ) $pump_flow );
-echo pack ( 'CN', ( int ) PRM\P3_FLOW, ( int ) $pump_flow );
-echo pack ( 'CN', ( int ) PRM\TANK_VOL, ( int ) $tank_volume );
-echo pack ( 'CN', ( int ) PRM\ONTIME, ( int ) $ontime );
-echo pack ( 'CN', ( int ) PRM\REFRESH_RATE, ( int ) $refresh_rate );
-// echo pack ( 'CN', ( int ) PRM\LAST_ERR, ( int ) 0 );
-
-echo $end;
-
-//
-// Request parameters from the Huzza
-//
-
-echo pack ( 'C', ( int ) CMD\GET );
-
-echo pack ( 'C', ( int ) PRM\ONTIME );
-echo pack ( 'C', ( int ) PRM\REFRESH_RATE );
-echo pack ( 'C', ( int ) PRM\P1_RQST_VOL );
-// echo pack ( 'C', ( int ) PRM\P2_RQST_VOL );
-// echo pack ( 'C', ( int ) PRM\P3_RQST_VOL );
-echo pack ( 'C', ( int ) PRM\TANK_VOL );
-echo pack ( 'C', ( int ) PRM\P1_PUMPED_VOL );
-echo pack ( 'C', ( int ) PRM\P2_PUMPED_VOL );
-echo pack ( 'C', ( int ) PRM\P3_PUMPED_VOL );
-echo pack ( 'C', ( int ) PRM\ADC1 );
-echo pack ( 'C', ( int ) PRM\ADC2 );
-echo pack ( 'C', ( int ) PRM\ADC3 );
-echo pack ( 'C', ( int ) PRM\ADC4 );
-echo pack ( 'C', ( int ) PRM\LAST_ERR );
-echo $end;
