@@ -42,7 +42,7 @@ foreach ( $chips as $v ) {
 printf ( "\n<br/>Från: %s", $from->format ( DateTime::ATOM ) );
 
 $Log = new HuzzaWatering ();
-$Log->setDeviceId ( $dev_id );
+$Log->loadDevice ( $dev_id );
 $Log->LoadLog ( $from );
 $log_arr = $Log->asArray ( $n );
 printf ( "\n<br/>Punkter: %d</p>", count ( $log_arr ) );

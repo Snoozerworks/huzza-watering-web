@@ -51,7 +51,7 @@ foreach ( $chips as $v ) {
 	printf ( "<a href=\"?dev_id=%s\">%s %s</a><br/>\n", $v, $sel, $v );
 }
 
-$Log->setDeviceId ( $dev_id );
+$Log->loadDevice ( $dev_id );
 $Log->LoadLog ( $from_time );
 $log_arr = $Log->getLog ();
 
