@@ -59,12 +59,16 @@ if (! $log_arr) {
 ?>
 
 Visa senaste
-<a href="?history=P1W">månad</a>
-	<a href="?period=P1W&samples=50">vecka</a>
-	<a href="?period=P1D&samples=50">dag</a>
-	<a href="?period=PT1H&samples=50">timme</a>
-	<a href="?period=all&samples=50">allt</a>
-
+<?php 
+echo <<< EOF
+<a href="?dev_id=$dev_id&period=P1M&samples=50">månad</a>
+<a href="?dev_id=$dev_id&period=P1W&samples=50">vecka</a>
+<a href="?dev_id=$dev_id&period=P1D&samples=50">dag</a>
+<a href="?dev_id=$dev_id&period=PT1H&samples=50">timme</a>
+<a href="?dev_id=$dev_id&period=all&samples=50">allt</a>
+EOF
+?>
+	
 	<script>
     require([
 				 // Dojox chart resources
