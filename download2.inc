@@ -67,14 +67,16 @@ function requestParams($params) {
 			PRM\ADC4 
 	];
 	
-	ksort ( $params );
+	$params = array_unique ( $params );	
+	sort ( $params );
+	
 	$payload = '';
-	foreach ( $params as $id => $val ) {
+	foreach ( $params as $prm_id ) {
 		// Filter out read only parameters
-		if (! in_array ( $id, $keep_ids )) {
+		if (! in_array ( $prm_id, $keep_ids )) {
 			continue;
 		}
-		$payload .= pack ( 'C', ( int ) $id );
+		$payload .= pack ( 'C', ( int ) $prm_id );
 	}
 	
 	if ($payload) {
