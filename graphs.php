@@ -269,11 +269,11 @@ EOT;
 </script>
 
 	<!-- create the chart -->
-	<div id="chartNode" style="width: 85%; height: 350px; margin: auto;"></div>
-	<div id="legendNode" style="width: 85%; height: 50px; margin: auto;"></div>
 	<div id="chartPumped" style="width: 85%; height: 350px; margin: auto;"></div>
 	<div id="legendPumped" style="width: 85%; height: 50px; margin: auto;"></div>
 	<div id="chartError" style="width: 85%; height: 200px; margin: auto;"></div>
+	<div id="chartNode" style="width: 85%; height: 350px; margin: auto;"></div>
+	<div id="legendNode" style="width: 85%; height: 50px; margin: auto;"></div>
 
 </body>
 </html>
