@@ -6,7 +6,7 @@
 
 <?php
 require_once 'constants.inc';
-require_once '../../server_access/htmlize_func.inc';
+require_once '../server_access/htmlize_func.inc';
 
 /**
  *
