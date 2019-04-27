@@ -306,8 +306,6 @@ class HuzzaWatering {
 	 * Load log for given chip and returns it as an array.
 	 * Only SET commands preserved.
 	 *
-	 * @param string $chip
-	 *        	Optional. Use first available chip by default.
 	 * @param DateTime $from
 	 *        	Optional. Include data for last 2 days by default.
 	 */
@@ -341,7 +339,7 @@ class HuzzaWatering {
 				
 				$vals ['time'] = $date->getTimestamp ();
 				$vals ['timestr'] = $row [1];
-				$vals ['id'] = $row [3];
+				$vals ['id'] = ( int ) $row [3];
 				$vals ['CMD'] = CMD\SET;
 				
 				$row = array_slice ( $row, 5 );
@@ -350,7 +348,7 @@ class HuzzaWatering {
 				$pid = '';
 				for($k = 0; $k < $len; ++ $k) {
 					if ($k % 2) {
-						$vals [$pid] = $row [$k];
+						$vals [$pid] = ( int ) $row [$k];
 					} else {
 						$pid = sprintf ( "s%d", $row [$k] );
 						$this->pids [$pid] = null;
